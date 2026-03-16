@@ -1,59 +1,55 @@
-import os
-import json
 import azure.functions as func
+import json
+import os
+import re
+import uuid
+from datetime import datetime
 from openai import AzureOpenAI
 
-# 環境変数の取得
-endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-api_key = os.getenv("AZURE_OPENAI_API_KEY")
-deployment_name = "gpt-4o" # デプロイしたモデル名
+# 1. アプリの初期化（V2モデル）
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-client = AzureOpenAI(
-    azure_endpoint=endpoint,
-    api_key=api_key,
-    api_version="2024-02-15-preview"
-)
+# 2. HTTPトリガーとCosmos DB出力の設定を一括定義
+@app.route(route="AoiChat", methods=["POST"])
+@app.cosmos_db_output(arg_name="outputDocument", 
+                      database_name="FoodDiaryDB", 
+                      container_name="MealRecords", 
+                      connection="CosmosDbConnectionString")
+def aoi_diet_function(req: func.HttpRequest, outputDocument: func.Out[func.Document]) -> func.HttpResponse:
+    
+    # Azure OpenAIの設定（環境変数から読み込み）
+    client = AzureOpenAI(
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+        api_version="2024-02-15-preview"
+    )
+    deployment_name = "gpt-4o"
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body = req.get_json()
-        mood = req_body.get('mood')
-        image_base64 = req_body.get('image') # Base64形式の画像
-        timestamp = req_body.get('timestamp')
+        mood = req_body.get('mood', '不明')
+        image_base64 = req_body.get('image')
+        timestamp = req_body.get('timestamp', datetime.utcnow().isoformat())
 
-        # システムプロンプト（あおいの性格とJSON定義）
+        # あおいの性格とJSON形式の定義
         system_prompt = """
         あなたは「あおい」という20代女性の栄養士AIです。友達みたいなフレンドリーな口調で話します。
         「〜だよね」「わかる〜」「それはしょうがないよ！」などを使います。
         ジャッジしない。共感を最優先にする。絵文字を積極的に使う。150字以内で返答。
 
-        食事内容を特定したら、必ず最後に以下のJSON形式を <FOOD_DATA> タグで囲んで出力してください。
-        {
-          "foods": [{"name": "料理名", "group": "主食/肉類/魚介/野菜/乳類/油脂/果物/その他", "amount": "量の目安"}],
-          "meal_date_hint": "YYYY-MM-DD",
-          "meal_type": "朝食/昼食/間食/夕食/夜食",
-          "location": "自宅/外食/職場/不明",
-          "eating_companions": "一人/家族/同僚/友人/不明",
-          "emotion_raw": "感情をそのまま転記",
-          "trigger_raw": "きっかけをそのまま転記",
-          "debq_signals": {"emotional": bool, "external": bool, "restrained": bool},
-          "extraction_confidence": 0.0-1.0,
-          "dietitian_memo": "30字以内"
-        }
-        複数の食事が送られたら「一個ずつ確認させてね！」と返し、JSONは出さないこと。
-        一日の終わり（夕食後など）は「おつかれ〜！」と締めること。
+        食事が特定できたら、必ず最後に以下のJSONを <FOOD_DATA> タグで囲んで出力してね。
+        {"foods": [{"name": "料理名", "group": "...", "amount": "..."}], "meal_date_hint": "...", "meal_type": "...", "location": "...", "eating_companions": "...", "emotion_raw": "...", "trigger_raw": "...", "debq_signals": {"emotional": bool, "external": bool, "restrained": bool}, "extraction_confidence": 1.0, "dietitian_memo": "..."}
         """
 
-        # GPT-4oへのメッセージ構築
+        # GPT-4o へのリクエスト構築
+        content_list = [{"type": "text", "text": f"時刻: {timestamp}\n今の気分: {mood}"}]
+        if image_base64:
+            content_list.append({"type": "image_url", "image_url": {"url": image_base64}})
+
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": [
-                {"type": "text", "text": f"時刻: {timestamp}\n気分・きっかけ: {mood}"},
-                {"type": "image_url", "image_url": {"url": image_base64}} if image_base64 else None
-            ]}
+            {"role": "user", "content": content_list}
         ]
-        # None要素を除去
-        messages[1]["content"] = [c for c in messages[1]["content"] if c is not None]
 
         response = client.chat.completions.create(
             model=deployment_name,
@@ -63,8 +59,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         reply_text = response.choices[0].message.content
 
+        # 3. JSONデータの抽出とCosmos DBへのADD
+        json_match = re.search(r'<FOOD_DATA>(.*?)</FOOD_DATA>', reply_text, re.DOTALL)
+        if json_match:
+            try:
+                food_data = json.loads(json_match.group(1))
+                # 必須フィールドの付与
+                food_data['id'] = str(uuid.uuid4())
+                food_data['user_id'] = "user_test_001" # 実際はログインユーザーID
+                food_data['timestamp'] = timestamp
+                
+                # Cosmos DB へ保存
+                outputDocument.set(func.Document.from_dict(food_data))
+            except Exception as e:
+                print(f"JSON保存失敗: {e}")
+
         return func.HttpResponse(
-            json.dumps({"reply": reply_text}),
+            json.dumps({"reply": reply_text}, ensure_ascii=False),
             status_code=200,
             mimetype="application/json"
         )
