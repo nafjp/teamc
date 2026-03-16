@@ -72,6 +72,6 @@ jobs:
           app-name: 'teamC'
           slot-name: 'Production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B426C30BB98E401CA26AD79416D3FAB8 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E1ECC7AD5C944E9C927AE87833AC0D9D }}
           sku: 'flexconsumption'
         
