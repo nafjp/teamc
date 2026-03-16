@@ -3,124 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>栄養士AI あおい</title>
+    <title>栄養士AI あおい 🌿</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .chat-bubble { border-radius: 20px; padding: 12px 16px; max-width: 80%; }
-        .bg-aoi { background-color: #E0F2F1; } /* あおいちゃんのイメージカラー */
+        body { background-color: #f0f4f8; }
+        .chat-container { height: calc(100vh - 180px); }
+        .bubble { border-radius: 1.2rem; padding: 0.8rem 1rem; max-width: 85%; line-height: 1.5; }
+        .bubble-aoi { background-color: #e0f2f1; color: #004d40; align-self: flex-start; border-bottom-left-radius: 0.2rem; }
+        .bubble-user { background-color: #00897b; color: white; align-self: flex-end; border-bottom-right-radius: 0.2rem; }
+        .loading-dots span { animation: blink 1s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
     </style>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col">
+<body class="flex flex-col h-screen">
 
-    <header class="bg-teal-500 text-white p-4 shadow-md flex justify-between items-center">
-        <h1 class="text-lg font-bold">栄養士AI あおい 🌿</h1>
-        <span class="text-xs">Online</span>
+    <header class="bg-teal-600 text-white p-4 shadow-lg flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">🌿</span>
+            <h1 class="text-xl font-bold tracking-tight">栄養士AI あおい</h1>
+        </div>
+        <div class="text-xs bg-teal-700 px-2 py-1 rounded">aoichan App</div>
     </header>
 
-    <main id="chat-window" class="flex-1 overflow-y-auto p-4 space-y-4">
-        <div class="chat-bubble bg-aoi self-start text-gray-800 shadow-sm">
-            やっほー！あおいです😊<br>今日の食事を教えてね。写真があると嬉しいな！
+    <main id="chat-window" class="chat-container overflow-y-auto p-4 flex flex-col gap-4">
+        <div class="bubble bubble-aoi shadow-sm">
+            やっほー！あおいです😊<br>
+            今日は何食べたのかな？写真と一緒に今の気分も教えてね！
         </div>
     </main>
 
-    <footer class="bg-white p-4 border-t shadow-inner">
-        <div class="flex flex-col space-y-2">
-            <img id="preview" class="hidden w-24 h-24 object-cover rounded-lg border">
-            
-            <div class="flex items-center space-x-2">
-                <label class="cursor-pointer bg-gray-200 p-2 rounded-full hover:bg-gray-300">
-                    📷
-                    <input type="file" id="image-input" accept="image/*" class="hidden" onchange="previewImage(event)">
+    <footer class="bg-white border-t p-4 shadow-inner">
+        <div class="max-w-3xl mx-auto space-y-3">
+            <div id="preview-container" class="hidden relative inline-block">
+                <img id="image-preview" class="w-20 h-20 object-cover rounded-lg border-2 border-teal-500">
+                <button onclick="clearImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs">✕</button>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <label class="flex-shrink-0 cursor-pointer p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition">
+                    <span class="text-xl">📷</span>
+                    <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
                 </label>
-                <input type="text" id="mood-input" placeholder="今の気分や食事のきっかけは？" 
-                       class="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                
+                <input type="text" id="mood-input" placeholder="今の気分（例：仕事で疲れた〜）" 
+                    class="flex-1 bg-gray-50 border border-gray-300 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500">
+                
                 <button onclick="sendMessage()" id="send-btn" 
-                        class="bg-teal-500 text-white px-6 py-2 rounded-full font-bold hover:bg-teal-600 transition">
-                    送信
+                    class="bg-teal-600 hover:bg-teal-700 text-white p-3 rounded-full transition disabled:opacity-50">
+                    <span class="text-xl">🚀</span>
                 </button>
             </div>
-            <p class="text-[10px] text-center text-gray-400">※時刻は自動的に送信されます</p>
         </div>
     </footer>
 
     <script>
-        const chatWindow = document.getElementById('chat-window');
-        let selectedImageBase64 = null;
+        const API_URL = 'https://aoichan.azurewebsites.net/api/AoiChat';
+        let base64Image = null;
 
-        // 画像プレビュー処理
-        function previewImage(event) {
+        // 画像選択時の処理
+        function handleFileSelect(event) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    selectedImageBase64 = e.target.result;
-                    const preview = document.getElementById('preview');
-                    preview.src = selectedImageBase64;
-                    preview.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                base64Image = e.target.result;
+                document.getElementById('image-preview').src = base64Image;
+                document.getElementById('preview-container').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
         }
 
-        // メッセージ送信
+        // 画像リセット
+        function clearImage() {
+            base64Image = null;
+            document.getElementById('file-input').value = '';
+            document.getElementById('preview-container').classList.add('hidden');
+        }
+
+        // メッセージ表示関数
+        function addMessage(type, text) {
+            const window = document.getElementById('chat-window');
+            const div = document.createElement('div');
+            div.className = `bubble bubble-${type} shadow-sm`;
+            div.innerHTML = text.replace(/\n/g, '<br>');
+            window.appendChild(div);
+            window.scrollTo({ top: window.scrollHeight, behavior: 'smooth' });
+        }
+
+        // 送信メイン処理
         async function sendMessage() {
             const moodInput = document.getElementById('mood-input');
-            const mood = moodInput.value;
-            const now = new Date().toISOString(); // 時刻を取得
-
-            if (!mood && !selectedImageBase64) return;
-
-            // ユーザー側の表示
-            appendMessage('user', mood || '（写真を送ったよ）');
-
-            // 送信ボタンの無効化
             const btn = document.getElementById('send-btn');
+            const mood = moodInput.value;
+
+            if (!mood && !base64Image) return;
+
+            // ユーザーの入力を画面に表示
+            addMessage('user', mood || "（写真を送信しました）");
+            
+            // UIを一時無効化
             btn.disabled = true;
-            btn.innerText = "分析中...";
+            moodInput.value = '';
+            const loadingId = 'loading-' + Date.now();
+            addMessage('aoi', `<span id="${loadingId}" class="loading-dots">あおいが考え中<span>.</span><span>.</span><span>.</span></span>`);
 
             try {
-                // Azure Functions (API) へのリクエスト
-                const response = await fetch('YOUR_AZURE_FUNCTION_URL_HERE', {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         mood: mood,
-                        image: selectedImageBase64,
-                        timestamp: now
+                        image: base64Image,
+                        timestamp: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
                     })
                 });
 
+                if (!response.ok) throw new Error('通信エラーが発生しました');
+
                 const data = await response.json();
                 
-                // あおいの返答を表示 (JSON部分を除去してテキストのみ表示)
-                const cleanText = data.reply.replace(/<FOOD_DATA>[\s\S]*?<\/FOOD_DATA>/, '').trim();
-                appendMessage('aoi', cleanText);
-
-                // JSONデータが埋め込まれていれば、内部的に処理（DEBQ分析用）
-                const foodJsonMatch = data.reply.match(/<FOOD_DATA>([\s\S]*?)<\/FOOD_DATA>/);
-                if (foodJsonMatch) {
-                    const foodData = JSON.parse(foodJsonMatch[1]);
-                    console.log("DEBQ分析用データ取得:", foodData);
-                    // ここでローカルDBに保存したり、UIに反映させたりする
-                }
+                // 「あおい」の返答からJSONタグを除去して表示
+                const cleanReply = data.reply.replace(/<FOOD_DATA>[\s\S]*?<\/FOOD_DATA>/, '').trim();
+                
+                document.getElementById(loadingId).parentElement.innerHTML = cleanReply;
+                clearImage();
 
             } catch (error) {
-                appendMessage('aoi', 'ごめん！ちょっと通信エラーかも。もう一回送ってみて💦');
+                document.getElementById(loadingId).parentElement.innerHTML = "ごめんね、うまく繋がらなかったみたい💦 もう一度送ってみて！";
+                console.error(error);
             } finally {
                 btn.disabled = false;
-                btn.innerText = "送信";
-                moodInput.value = '';
-                document.getElementById('preview').classList.add('hidden');
-                selectedImageBase64 = null;
             }
-        }
-
-        function appendMessage(sender, text) {
-            const div = document.createElement('div');
-            div.className = `chat-bubble shadow-sm ${sender === 'user' ? 'bg-white self-end ml-auto text-gray-800' : 'bg-aoi self-start text-gray-800'}`;
-            div.innerText = text;
-            chatWindow.appendChild(div);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
         }
     </script>
 </body>
