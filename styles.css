@@ -1,0 +1,48 @@
+body {
+  font-family: sans-serif;
+  background: #fafafa;
+  margin: 0;
+  padding: 24px;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.messages {
+  margin-bottom: 24px;
+}
+
+.message {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.message.user {
+  border-left: 4px solid #4f46e5;
+}
+
+.message.assistant {
+  border-left: 4px solid #10b981;
+}
+
+.form {
+  display: grid;
+  gap: 8px;
+}
+
+textarea,
+input,
+button {
+  font: inherit;
+  padding: 10px;
+}
+
+.error {
+  color: #b91c1c;
+  min-height: 1.2em;
+}
