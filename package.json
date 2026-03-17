@@ -4,13 +4,17 @@
   "private": true,
   "main": "dist/src/index.js",
   "scripts": {
-    "start": "func start"
+    "build": "tsc",
+    "start": "func start",
+    "clean": "rimraf dist"
   },
   "dependencies": {
     "@azure/cosmos": "^4.1.0",
     "@azure/functions": "^4.5.0"
   },
-  "engines": {
-    "node": ">=20"
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.2"
   }
 }
