@@ -3,138 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>栄養士AI あおい 🌿</title>
+    <title>DEBQ AIカウンセラー</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #f0f4f8; }
-        .chat-container { height: calc(100vh - 180px); }
-        .bubble { border-radius: 1.2rem; padding: 0.8rem 1rem; max-width: 85%; line-height: 1.5; }
-        .bubble-aoi { background-color: #e0f2f1; color: #004d40; align-self: flex-start; border-bottom-left-radius: 0.2rem; }
-        .bubble-user { background-color: #00897b; color: white; align-self: flex-end; border-bottom-right-radius: 0.2rem; }
-        .loading-dots span { animation: blink 1s infinite; }
-        @keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+        body { font-family: 'Kiwi Maru', serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+<body class="bg-pink-50 min-h-screen flex flex-col items-center p-4">
 
-    <header class="bg-teal-600 text-white p-4 shadow-lg flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <span class="text-2xl">🌿</span>
-            <h1 class="text-xl font-bold tracking-tight">栄養士AI あおい</h1>
-        </div>
-        <div class="text-xs bg-teal-700 px-2 py-1 rounded">aoichan App</div>
-    </header>
+    <div class="w-full max-w-md text-center mb-6">
+        <h1 class="text-2xl font-bold text-pink-600">🌸 心の栄養相談室</h1>
+        <p class="text-sm text-pink-400">GPT-4oがあなたの食行動を分析します</p>
+    </div>
 
-    <main id="chat-window" class="chat-container overflow-y-auto p-4 flex flex-col gap-4">
-        <div class="bubble bubble-aoi shadow-sm">
-            やっほー！あおいです😊<br>
-            今日は何食べたのかな？写真と一緒に今の気分も教えてね！
-        </div>
-    </main>
-
-    <footer class="bg-white border-t p-4 shadow-inner">
-        <div class="max-w-3xl mx-auto space-y-3">
-            <div id="preview-container" class="hidden relative inline-block">
-                <img id="image-preview" class="w-20 h-20 object-cover rounded-lg border-2 border-teal-500">
-                <button onclick="clearImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs">✕</button>
+    <div id="chat-container" class="w-full max-w-md flex-1 glass-card rounded-3xl shadow-xl overflow-hidden flex flex-col border border-pink-100">
+        
+        <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div class="flex items-end space-x-2">
+                <div class="w-8 h-8 rounded-full bg-pink-200 flex items-center justify-center text-lg">🤖</div>
+                <div class="bg-white text-gray-700 p-3 rounded-2xl rounded-bl-none shadow-sm max-w-[80%] border border-pink-50 text-sm">
+                    こんにちは！今日はどんな気分ですか？<br>少しずつ、いつもの食事について教えてくださいね。
+                </div>
             </div>
 
-            <div class="flex items-center gap-2">
-                <label class="flex-shrink-0 cursor-pointer p-3 bg-gray-100 rounded-full hover:bg-gray-200 transition">
-                    <span class="text-xl">📷</span>
-                    <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
-                </label>
-                
-                <input type="text" id="mood-input" placeholder="今の気分（例：仕事で疲れた〜）" 
-                    class="flex-1 bg-gray-50 border border-gray-300 rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-teal-500">
-                
-                <button onclick="sendMessage()" id="send-btn" 
-                    class="bg-teal-600 hover:bg-teal-700 text-white p-3 rounded-full transition disabled:opacity-50">
-                    <span class="text-xl">🚀</span>
+            <div class="flex items-end justify-end space-x-2">
+                <div class="bg-pink-500 text-white p-3 rounded-2xl rounded-br-none shadow-md max-w-[80%] text-sm">
+                    ちょっと疲れ気味で、甘いものが止まりません…
+                </div>
+                <div class="w-8 h-8 rounded-full bg-pink-400 flex items-center justify-center text-white text-xs">私</div>
+            </div>
+        </div>
+
+        <div class="p-4 bg-white border-t border-pink-50">
+            <div class="flex space-x-2">
+                <button class="p-2 bg-pink-100 rounded-full hover:bg-pink-200 transition-colors text-pink-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
+                <input type="text" id="userInput" placeholder="メッセージを入力..." 
+                       class="flex-1 border-none focus:ring-0 text-sm py-2 px-1 outline-none text-gray-600">
+                <button onclick="sendMessage()" class="bg-pink-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-pink-600 active:scale-95 transition-all text-sm font-bold">
+                    送信
                 </button>
             </div>
         </div>
-    </footer>
+    </div>
 
     <script>
-        const API_URL = 'https://teamc-csd4behygxghb8gk.japanwest-01.azurewebsites.net/';
-        let base64Image = null;
-
-        // 画像選択時の処理
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                base64Image = e.target.result;
-                document.getElementById('image-preview').src = base64Image;
-                document.getElementById('preview-container').classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // 画像リセット
-        function clearImage() {
-            base64Image = null;
-            document.getElementById('file-input').value = '';
-            document.getElementById('preview-container').classList.add('hidden');
-        }
-
-        // メッセージ表示関数
-        function addMessage(type, text) {
-            const window = document.getElementById('chat-window');
-            const div = document.createElement('div');
-            div.className = `bubble bubble-${type} shadow-sm`;
-            div.innerHTML = text.replace(/\n/g, '<br>');
-            window.appendChild(div);
-            window.scrollTo({ top: window.scrollHeight, behavior: 'smooth' });
-        }
-
-        // 送信メイン処理
         async function sendMessage() {
-            const moodInput = document.getElementById('mood-input');
-            const btn = document.getElementById('send-btn');
-            const mood = moodInput.value;
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (!message) return;
 
-            if (!mood && !base64Image) return;
-
-            // ユーザーの入力を画面に表示
-            addMessage('user', mood || "（写真を送信しました）");
+            // 画面にユーザーのメッセージを表示する処理（略）
+            console.log("送信内容:", message);
             
-            // UIを一時無効化
-            btn.disabled = true;
-            moodInput.value = '';
-            const loadingId = 'loading-' + Date.now();
-            addMessage('aoi', `<span id="${loadingId}" class="loading-dots">あおいが考え中<span>.</span><span>.</span><span>.</span></span>`);
+            // ここに Logic Apps の URL を入れる
+            // const logicAppsUrl = 'YOUR_LOGIC_APPS_ENDPOINT';
+            // await fetch(logicAppsUrl, { method: 'POST', body: JSON.stringify({ text: message }) });
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        mood: mood,
-                        image: base64Image,
-                        timestamp: new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })
-                    })
-                });
-
-                if (!response.ok) throw new Error('通信エラーが発生しました');
-
-                const data = await response.json();
-                
-                // 「あおい」の返答からJSONタグを除去して表示
-                const cleanReply = data.reply.replace(/<FOOD_DATA>[\s\S]*?<\/FOOD_DATA>/, '').trim();
-                
-                document.getElementById(loadingId).parentElement.innerHTML = cleanReply;
-                clearImage();
-
-            } catch (error) {
-                document.getElementById(loadingId).parentElement.innerHTML = "ごめんね、うまく繋がらなかったみたい💦 もう一度送ってみて！";
-                console.error(error);
-            } finally {
-                btn.disabled = false;
-            }
+            input.value = '';
         }
     </script>
 </body>
