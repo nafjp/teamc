@@ -4,32 +4,74 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>食事チャット記録</title>
-  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            line: {
+              green: '#06C755',
+              bg: '#A7D8F7',
+              panel: '#F7F7F7',
+              border: '#DCDCDC',
+              text: '#111827'
+            }
+          },
+          boxShadow: {
+            bubble: '0 1px 2px rgba(0,0,0,0.08)'
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body>
-  <main class="container">
-    <h1>食事チャット記録</h1>
+<body class="min-h-screen bg-line-bg text-line-text">
+  <div class="mx-auto flex min-h-screen max-w-md flex-col bg-white shadow-xl">
+    <header class="sticky top-0 z-10 flex items-center gap-3 border-b border-line-border bg-line-green px-4 py-3 text-white">
+      <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-lg font-bold">あ</div>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-base font-semibold">あおい</p>
+        <p class="text-xs text-white/90">食事記録サポート</p>
+      </div>
+      <div class="rounded-full bg-white/15 px-3 py-1 text-xs">相談中</div>
+    </header>
 
-    <div id="messages" class="messages"></div>
+    <main id="messages" class="flex-1 space-y-4 overflow-y-auto bg-[#BFE7FF] px-3 py-4"></main>
 
-    <form id="mealForm" class="form">
-      <label>会話内容</label>
-      <textarea id="messageText" rows="4" required></textarea>
+    <section class="border-t border-line-border bg-line-panel px-3 py-3">
+      <div class="mb-2 rounded-2xl bg-white p-3 shadow-sm">
+        <label for="moodText" class="mb-1 block text-xs font-semibold text-gray-500">今の気分</label>
+        <input id="moodText" type="text" placeholder="例: イライラしていた、少し安心した"
+          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-line-green" />
 
-      <label>気分</label>
-      <input id="moodText" type="text" />
+        <label for="mealTimeText" class="mb-1 mt-3 block text-xs font-semibold text-gray-500">食べた時刻</label>
+        <input id="mealTimeText" type="text" placeholder="例: 19:30"
+          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-line-green" />
 
-      <label>食べた時刻</label>
-      <input id="mealTimeText" type="text" placeholder="19:30" />
+        <label for="imageFile" class="mb-1 mt-3 block text-xs font-semibold text-gray-500">写真</label>
+        <div class="flex items-center gap-2">
+          <label for="imageFile" class="inline-flex cursor-pointer items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100">
+            写真を選ぶ
+          </label>
+          <input id="imageFile" type="file" accept="image/*" class="hidden" />
+          <span id="fileName" class="truncate text-xs text-gray-500">未選択</span>
+        </div>
+      </div>
 
-      <label>写真</label>
-      <input id="imageFile" type="file" accept="image/*" />
-
-      <div id="errorMessage" class="error"></div>
-
-      <button type="submit">送信</button>
-    </form>
-  </main>
+      <form id="mealForm" class="space-y-2">
+        <div id="errorMessage" class="min-h-[1.25rem] px-1 text-sm text-red-600"></div>
+        <div class="flex items-end gap-2 rounded-3xl bg-white px-3 py-2 shadow-sm">
+          <textarea id="messageText" rows="1" required placeholder="食べたものや気持ちを入力"
+            class="max-h-32 min-h-[40px] flex-1 resize-none bg-transparent px-1 py-2 text-sm outline-none placeholder:text-gray-400"></textarea>
+          <button id="submitButton" type="submit"
+            class="inline-flex h-10 min-w-[72px] items-center justify-center rounded-full bg-line-green px-4 text-sm font-semibold text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60">
+            送信
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 
   <script src="app.js"></script>
 </body>
