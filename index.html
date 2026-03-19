@@ -469,17 +469,17 @@ async function submitData() {
   const payload = buildPayload();
 
   // ── POST to your endpoint ──
-  // try {
-  //   const res = await fetch('/api/meals', {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: JSON.stringify(payload)
-  //   });
-  //   const result = await res.json();
-  //   console.log('Server response:', result);
-  // } catch(err) {
-  //   console.error('送信エラー:', err);
-  // }
+   try {
+     const res = await fetch('https://prod-25.northcentralus.logic.azure.com:443/workflows/1f4121406b8741f2bff55307fc3e4f66/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=pCNJ_U_c86jR7y39_kOCHWNMl1KRVVpvnA64M8p5uPQ', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify(payload)
+     });
+     const result = await res.json();
+     console.log('Server response:', result);
+   } catch(err) {
+     console.error('送信エラー:', err);
+   }
 
   console.log('📦 JSON payload:\n', JSON.stringify(payload, null, 2));
 
